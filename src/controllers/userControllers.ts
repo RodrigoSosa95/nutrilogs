@@ -6,6 +6,7 @@ import { IToken } from "../models/Token";
 import isAdmin from "../middleware/isAdmin";
 import Profile from "../models/Profile";
 import { IProfile } from "../models/ProfilePictures";
+import { NOTFOUND } from "dns";
 
 const router = express.Router();
 
@@ -185,5 +186,28 @@ router.get(
       });
   }
 );
+
+router.get(
+  "/:objectId/",
+  authenticate,
+  (request: UserRequest, response: Response): void => {
+    const { objectId } = request.params;
+    User.findOne({ _id: objectId })
+      .then(user => {
+        response
+          .status(OK)
+          .json({ user })
+          .send();
+      })
+      .catch((error: Error) => {
+        response
+          .status(NOT_FOUND)
+          .json({ message: "Could not complete request", error: error.message })
+          .send();
+      });
+  }
+);
+
+
 
 export default router;
