@@ -10,8 +10,8 @@ export interface IUserDocument extends mongoose.Document {
   email: string;
   password: string;
   _profile: mongoose.Types.ObjectId;
-  isActive: boolean;
-  isAdmin: boolean;
+  isActive?: boolean;
+  isAdmin?: boolean;
 }
 
 export interface IUser extends IUserDocument {
@@ -26,6 +26,8 @@ export interface IUserModel extends mongoose.Model<IUser> {
   ): Promise<any>;
   signIn(email: string, password: string): Promise<any>;
   findByToken(key: string): Promise<any>;
+  createUser(data: Object): IUser;
+  createAdminUser(data: Object): IUser;
 }
 
 const userSchema = new mongoose.Schema({
@@ -168,6 +170,19 @@ userSchema.statics.findByToken = function findByToken(key: string) {
         reject(error);
       });
   });
+};
+
+userSchema.statics.createUser = function createUser(data: Object) {
+  const User = this;
+  const user = new User(data);
+  return user;
+};
+
+userSchema.statics.createAdminUser = function createAdminUser(data: Object) {
+  const User = this;
+  const user = User.createUser(data);
+  user.isAdmin = true;
+  return user;
 };
 
 const User: IUserModel = mongoose.model<IUser, IUserModel>("User", userSchema);
