@@ -1,0 +1,1 @@
+mkdir -p media/profile-pictures static

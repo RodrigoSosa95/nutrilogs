@@ -7,13 +7,25 @@ export interface IProfilePictureDocument extends mongoose.Document {
   _owner: mongoose.Types.ObjectId;
 }
 
-export interface IProfile extends IProfileDocument {}
+export interface IProfilePicture extends IProfileDocument {}
 
-export interface IProfileModel extends mongoose.Model<IProfile> {}
+export interface IProfilePictureModel extends mongoose.Model<IProfilePicture> {}
 
 const profilePictureSchema = new mongoose.Schema({
-  uri: {
+  path: {
     type: String,
+    required: true,
+  },
+  fileName: {
+    type: String,
+    required: true,
+  },
+  destination: {
+    type: String,
+    required: true,
+  },
+  size: {
+    type: Number,
     required: true,
   },
   isActive: {
@@ -27,7 +39,7 @@ const profilePictureSchema = new mongoose.Schema({
   },
 });
 
-const ProfilePicture: IProfileModel = mongoose.model(
+const ProfilePicture: IProfilePictureModel = mongoose.model(
   "ProfilePicture",
   profilePictureSchema,
 );

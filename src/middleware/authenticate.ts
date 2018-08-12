@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { UNAUTHORIZED, NOT_FOUND } from "http-status-codes";
+import { UNAUTHORIZED, NOT_FOUND, FORBIDDEN } from "http-status-codes";
 import User, { IUser } from "../models/User";
 
 export interface UserRequest extends Request {
@@ -15,14 +15,18 @@ export default (
     const token = request.headers.authorization.split(" ")[1];
     User.findByToken(token)
       .then((user: IUser) => {
-        user.populate("_profile", (error: Error, populatedUser) => {
-          if (!error) {
-            request.user = populatedUser;
-            next();
-          } else {
-            response.status(NOT_FOUND).json({ message: "Error retrieving user data" }).send();
-          }
-        });
+        if (user.isActive) {
+          user.populate("_profile", (error: Error, populatedUser) => {
+            if (!error) {
+              request.user = populatedUser;
+              next();
+            } else {
+              response.status(NOT_FOUND).json({ message: "Error retrieving user data" }).send();
+            }
+          });
+        } else {
+          response.status(FORBIDDEN).json({ message: "Account deactivated" }).send();
+        }
       })
       .catch((error: Error) => {
         response

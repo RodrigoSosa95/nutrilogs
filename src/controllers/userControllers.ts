@@ -1,12 +1,15 @@
 import express, { Request, Response, NextFunction } from "express";
 import { BAD_REQUEST, OK, NOT_FOUND } from "http-status-codes";
+import fs from "fs";
+import multer = require("multer");
+import moment from "moment";
 import User, { IUser } from "../models/User";
 import authenticate, { UserRequest } from "../middleware/authenticate";
 import { IToken } from "../models/Token";
 import isAdmin from "../middleware/isAdmin";
-import Profile from "../models/Profile";
-import { IProfile } from "../models/ProfilePictures";
-import { NOTFOUND } from "dns";
+import Profile, { IProfile } from "../models/Profile";
+import ProfilePicture, { IProfilePicture } from "../models/ProfilePictures";
+import isSelf from "../middleware/isSelf";
 
 const router = express.Router();
 
@@ -208,6 +211,125 @@ router.get(
   }
 );
 
+enum FILE_TYPES {
+  JPG = "image/jpeg",
+  PNG = "image/png",
+  TIF = "image/tiff"
+}
+const profilePictureUploader = multer({
+  limits: { fileSize: 3460300.0, files: 3, parts: 10 },
+  storage: multer.diskStorage({
+    destination(request: UserRequest, file, next) {
+      next(undefined, "./media/profile-pictures/");
+    },
+    filename(request: UserRequest, file, next) {
+      const { user }: { user: IUser } = request;
+      const date = moment().unix();
+      let fileExtension = undefined;
+      switch (file.mimetype) {
+        case FILE_TYPES.JPG:
+          fileExtension = "jpg";
+          break;
+        case FILE_TYPES.PNG:
+          fileExtension = "png";
+          break;
+        case FILE_TYPES.TIF:
+          fileExtension = "tif";
+          break;
+        default:
+          fileExtension = "";
+          break;
+      }
+      next(undefined, `${file.fieldname}-${request.user._id}-${date.toString()}.${fileExtension}`);
+    }
+  }),
+  fileFilter(request: UserRequest, file, next) {
+    if (
+      file.mimetype === FILE_TYPES.JPG ||
+      file.mimetype === FILE_TYPES.PNG ||
+      file.mimetype === FILE_TYPES.TIF
+    ) {
+      next(undefined, true);
+    } else {
+      next(undefined, false);
+    }
+  }
+});
 
+router.put(
+  "/update-user/",
+  authenticate,
+  profilePictureUploader.single("profile-image"),
+  (request: UserRequest, response: Response): void => {
+    const { user: _ } = request;
+    const { names, lastNames } = request.body;
+    Profile.findOne({ _id: _._profile })
+      .then((profile: IProfile) => {
+        profile.names = names || profile.names;
+        profile.lastNames = lastNames || profile.lastNames;
+        return profile.save();
+      })
+      .then((profile: IProfile) => {
+        const profilePicture = new ProfilePicture({
+          destination: request.file.destination,
+          path: request.file.path,
+          fileName: request.file.filename,
+          size: request.file.size,
+          _owner: _._id
+        });
+        profilePicture.save(
+          (error: Error, savedProfilePicture: IProfilePicture) => {
+            if (!error) {
+              profile._pictures.push(savedProfilePicture._id);
+              return profile.save();
+            } else {
+              response
+                .status(BAD_REQUEST)
+                .json({
+                  message: "Error uploading profile user picture",
+                  error: error.message
+                })
+                .send();
+            }
+          }
+        );
+      })
+      .then(() => {
+        _.populate("_profile", (error: Error, user) => {
+          response
+            .status(OK)
+            .json({ user })
+            .send();
+        });
+      })
+      .catch((error: Error) => {
+        response
+          .status(BAD_REQUEST)
+          .json({ message: "Error updating user", error: error.message });
+      });
+  }
+);
+
+router.delete(
+  "/deactivate-account/",
+  authenticate,
+  (request: UserRequest, response: Response): void => {
+    const { user } = request;
+    user.isActive = false;
+    user
+      .save()
+      .then(() => {
+        response
+          .status(OK)
+          .json({ message: "You've deactivated your account successfully" });
+      })
+      .catch((error: Error) => {
+        response.status(BAD_REQUEST).json({
+          message: "Error deactivating your account",
+          error: error.message
+        });
+      });
+  }
+);
 
 export default router;
