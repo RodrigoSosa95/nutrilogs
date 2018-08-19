@@ -240,7 +240,12 @@ const profilePictureUploader = multer({
           fileExtension = "";
           break;
       }
-      next(undefined, `${file.fieldname}-${request.user._id}-${date.toString()}.${fileExtension}`);
+      next(
+        undefined,
+        `${file.fieldname}-${
+          request.user._id
+        }-${date.toString()}.${fileExtension}`
+      );
     }
   }),
   fileFilter(request: UserRequest, file, next) {
@@ -331,5 +336,30 @@ router.delete(
       });
   }
 );
+
+router.put(
+  "/update-email/",
+  authenticate,
+  (request: UserRequest, response: Response): void => {
+    const { user } = request;
+    const { email } = request.body;
+    user.email = email;
+    user
+      .save(() => {
+        // TODO: send email when this action happens
+        response.status(OK).json({ message: "User email updated", user });
+      })
+      .catch((error: Error) => {
+        response
+          .status(BAD_REQUEST)
+          .json({
+            message: "Could not update user email",
+            error: error.message
+          });
+      });
+  }
+);
+
+
 
 export default router;

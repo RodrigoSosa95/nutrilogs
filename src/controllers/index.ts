@@ -1,8 +1,10 @@
 import express from "express";
-import usersController from "./userControllers";
+import userController from "./userControllers";
+import mealController from "./mealControllers";
 
 const router = express.Router();
 
-router.use("/users/", usersController);
+router.use("/users/", userController);
+router.use("/meals/", mealController);
 
 export default router;

@@ -1,20 +1,27 @@
 import mongoose from "mongoose";
-import Food from "./Food";
+import Food, { IFood } from "./Food";
 
 export interface IMealDocument extends mongoose.Document {
-  items: Array<any>;
+  items: Array<IFood>;
   total: number;
-  where: string;
+  location: string;
   date: Date;
   _user: mongoose.Types.ObjectId;
 }
 
-const Meal = new mongoose.Schema({
-  items: [Food],
+export interface IMeal extends IMealDocument {}
+
+export interface IMealModel extends mongoose.Model<IMeal> {}
+
+const mealSchema = new mongoose.Schema({
+  items: {
+    type: [mongoose.Types.ObjectId],
+    ref: "Food"
+  },
   total: {
     type: Number,
   },
-  where: {
+  location: {
     type: String,
     trim: true,
     minLength: 5,
@@ -29,4 +36,6 @@ const Meal = new mongoose.Schema({
   },
 });
 
-export default mongoose.model("meal", Meal);
+const Meal: IMealModel = mongoose.model("Meal", mealSchema);
+
+export default Meal;
