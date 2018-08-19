@@ -22,7 +22,7 @@ export interface IUserModel extends mongoose.Model<IUser> {
   signUp(
     email: string,
     password: string,
-    profile: IProfileDocument,
+    profile: Object,
   ): Promise<any>;
   signIn(email: string, password: string): Promise<any>;
   findByToken(key: string): Promise<any>;

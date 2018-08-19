@@ -11,7 +11,7 @@
     "build:ts": "tsc",
     "watch:ts": "tsc -w",
     "tslint": "tslint -c tslint.json -p tsconfig.json",
-    "test": "export DB_URI=mongodb://localhost:27017/nutrilogs-test && mocha -r ts-node/register src/**/*.test.ts"
+    "test": "export NODE_ENV=TEST && export DB_URI=mongodb://localhost:27017/nutrilogs-test && mocha -r ts-node/register src/**/*.test.ts"
   },
   "keywords": [],
   "author": "Rodrigo Sosa",

@@ -3,7 +3,6 @@ import express from "express";
 import bodyParser from "body-parser";
 import databaseConnection from "./databaseConnection";
 import rootControllers from "./controllers";
-import { BASE_DIR } from "./settings";
 
 const databaseUri: string =
   process.env.DB_URI || "mongodb://localhost:27017/nutrilogs";
@@ -18,7 +17,7 @@ app.set("port", process.env.PORT || 3005);
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(express.static(path.join(BASE_DIR, "media")));
+app.use(express.static("../media"));
 
 app.use("/api/v1/", rootControllers);
 

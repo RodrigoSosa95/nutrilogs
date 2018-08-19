@@ -85,7 +85,7 @@ router.put(
   }
 );
 
-router.put(
+router.delete(
   "/remove-meal/:objectId",
   authenticate,
   (request: UserRequest, response: Response) => {
@@ -106,7 +106,7 @@ router.put(
   }
 );
 
-router.put(
+router.get(
   "/my-meals/",
   authenticate,
   (request: UserRequest, response: Response) => {
@@ -125,7 +125,7 @@ router.put(
   }
 );
 
-router.put(
+router.get(
   "/meal/:objectId",
   authenticate,
   (request: UserRequest, response: Response) => {
